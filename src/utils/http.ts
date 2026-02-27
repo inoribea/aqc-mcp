@@ -7,7 +7,7 @@
 export interface TapQueryOptions {
   endpoint: string;
   adql: string;
-  format?: 'json' | 'csv' | 'votable';
+  format?: 'json' | 'csv' | 'votable' | 'text';
   timeout?: number;
   maxrec?: number;
 }
@@ -68,8 +68,40 @@ function parseTapResponse(text: string, format: string): TapResult {
   if (format === 'csv') {
     return parseCsvResponse(text);
   }
+  if (format === 'text') {
+    return parseTextResponse(text);
+  }
   // votable — return raw text as single-row result
   return { columns: ['votable'], rows: [{ votable: text }] };
+}
+
+/**
+ * Parse pipe-delimited text response from HEASARC TAP.
+ * Format: header row with | separators, data rows, footer with 'Number of rows/columns'.
+ */
+function parseTextResponse(text: string): TapResult {
+  const lines = text.split('\n').filter(line => {
+    const trimmed = line.trim();
+    return trimmed.length > 0 && !trimmed.startsWith('Number of');
+  });
+  if (lines.length === 0) {
+    return { columns: [], rows: [] };
+  }
+  const headers = lines[0].split('|').map(h => h.trim()).filter(h => h.length > 0);
+  const rows: Record<string, unknown>[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split('|').map(v => v.trim());
+    // Skip separator lines (e.g. '---+---+---')
+    if (values.every(v => /^[-+]+$/.test(v) || v.length === 0)) continue;
+    const obj: Record<string, unknown> = {};
+    for (let j = 0; j < headers.length; j++) {
+      const val = values[j + (values.length > headers.length ? 1 : 0)] ?? '';
+      const num = Number(val);
+      obj[headers[j]] = val.length > 0 && !isNaN(num) && val !== '' ? num : val;
+    }
+    rows.push(obj);
+  }
+  return { columns: headers, rows };
 }
 
 function parseJsonResponse(text: string): TapResult {

@@ -25,3 +25,4 @@ Thumbs.db
 # Test files
 test-*.js
 .npmrc
+.npmrc

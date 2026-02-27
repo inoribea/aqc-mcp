@@ -3,24 +3,20 @@ import { z } from 'zod';
 const MAST_API = 'https://mast.stsci.edu/api/v0/invoke';
 
 async function mastQuery(service: string, params: Record<string, unknown>, timeout = 60000): Promise<unknown> {
-  const body = JSON.stringify({ service, params, format: 'json', timeout: Math.floor(timeout / 1000) });
-
+  const requestPayload = JSON.stringify({ service, params, format: 'json', timeout: Math.floor(timeout / 1000) });
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
-
   try {
     const response = await fetch(MAST_API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `request=${encodeURIComponent(requestPayload)}`,
       signal: controller.signal,
     });
-
     if (!response.ok) {
       const text = await response.text().catch(() => '');
       throw new Error(`MAST API error (${response.status}): ${text.slice(0, 500)}`);
     }
-
     return await response.json();
   } finally {
     clearTimeout(timer);
