@@ -1,60 +1,45 @@
 #!/usr/bin/env node
-import { program } from 'commander';
 import { startSseAndStreamableHttpMcpServer } from 'mcp-http-server';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { listTools } from './tools/index.js';
+import { registerAllTools } from './tools/index.js';
 
-const VERSION = '1.2.5';
+const VERSION = '2.0.0';
 
-async function createMcpServer() {
+function createMcpServer() {
   const server = new McpServer(
-    {
-      name: 'astroquery-mcp',
-      version: VERSION,
-    },
-    {
-      capabilities: {
-        tools: {},
-      },
-    }
+    { name: 'astroquery-mcp', version: VERSION },
+    { capabilities: { tools: {} } }
   );
-
-  await listTools(server);
-
+  registerAllTools(server);
   return server;
 }
 
-program
-  .name('aqc-mcp')
-  .description('MCP server for astroquery-cli')
-  .version(VERSION)
-  .option('--port <port>', 'HTTP server port')
-  .option('--host <host>', 'HTTP server host')
-  .action(async (options) => {
-    try {
-      const server = await createMcpServer();
+async function main() {
+  const args = process.argv.slice(2);
+  const portIdx = args.indexOf('--port');
+  const hostIdx = args.indexOf('--host');
+  const port = portIdx !== -1 ? parseInt(args[portIdx + 1], 10) : undefined;
+  const host = hostIdx !== -1 ? args[hostIdx + 1] : undefined;
 
-      if (options.port || options.host) {
-        // HTTP mode with SSE support
-        await startSseAndStreamableHttpMcpServer({
-          host: options.host,
-          port: parseInt(options.port),
-          // @ts-ignore
-          createMcpServer: async ({ headers }) => {
-            return server;
-          },
-        });
-      } else {
-        // stdio mode
-        const transport = new StdioServerTransport();
-        await server.connect(transport);
-        console.error('AstroQuery MCP server running on stdio');
-      }
-    } catch (error) {
-      console.error('Fatal error:', error);
-      process.exit(1);
+  try {
+    if (port || host) {
+      await startSseAndStreamableHttpMcpServer({
+        host,
+        port: port!,
+        // @ts-ignore - createMcpServer signature mismatch
+        createMcpServer: async () => createMcpServer(),
+      });
+    } else {
+      const server = createMcpServer();
+      const transport = new StdioServerTransport();
+      await server.connect(transport);
+      console.error('AstroQuery MCP server running on stdio');
     }
-  });
+  } catch (error) {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  }
+}
 
-program.parse();
+main();

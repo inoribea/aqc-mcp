@@ -1,40 +1,35 @@
 import { z } from 'zod';
-import { executeAqc } from '../utils/executor.js';
+import { tapQuery, formatTapResult } from '../utils/http.js';
 
-let executeSimbadQuery: (identifier: string, lang?: string) => Promise<string>;
+const SIMBAD_TAP = 'https://simbad.cds.unistra.fr/simbad/sim-tap/sync';
 
 export function registerSimbadTools(server: any) {
-  executeSimbadQuery = async (identifier: string, lang?: string) => {
-    const args = ['simbad', 'query', '--identifier', identifier];
-    if (lang) args.push('--lang', lang);
-
-    const result = await executeAqc(args);
-
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-
-    return result.output || '';
-  };
-
   server.tool(
     'simbad_query',
-    'Query the SIMBAD astronomical database for an object identifier',
+    'Query SIMBAD astronomical database by object identifier (e.g. M31, NGC 1234, Vega)',
     {
-      identifier: z.string().describe('Object identifier (e.g., "M31", "NGC 1234")'),
-      lang: z.enum(['en', 'zh']).optional().describe('Output language'),
+      object_name: z.string().describe('Astronomical object name or identifier'),
+      lang: z.enum(['en', 'zh']).default('en').describe('Output language'),
     },
-    async ({ identifier, lang }: any) => {
-      const output = await executeSimbadQuery(identifier, lang);
+    async ({ object_name, lang }: { object_name: string; lang: string }) => {
+      const adql = `
+        SELECT TOP 10
+          basic.OID, basic.main_id, basic.ra, basic.dec,
+          basic.pmra, basic.pmdec,
+          basic.plx_value AS parallax,
+          basic.rvz_radvel AS radial_velocity,
+          basic.sp_type AS spectral_type,
+          basic.galdim_majaxis, basic.galdim_minaxis,
+          basic.morph_type AS morphological_type
+        FROM basic
+        JOIN ident ON basic.oid = ident.oidref
+        WHERE ident.id = '${object_name.replace(/'/g, "''")}'
+      `;
 
-      return {
-        content: [{
-          type: 'text',
-          text: output
-        }]
-      };
+      const result = await tapQuery({ endpoint: SIMBAD_TAP, adql });
+      const title = lang === 'zh' ? `SIMBAD 查询结果: ${object_name}` : `SIMBAD Query Result: ${object_name}`;
+      const text = formatTapResult(result, title);
+      return { content: [{ type: 'text' as const, text }] };
     }
   );
 }
-
-export { executeSimbadQuery };

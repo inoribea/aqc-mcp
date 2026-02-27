@@ -1,46 +1,38 @@
 import { z } from 'zod';
-import { executeAqc } from '../utils/executor.js';
+import { tapQuery, formatTapResult } from '../utils/http.js';
 
-let executeVizierQuery: (catalog: string, ra?: number, dec?: number, radius?: number, lang?: string) => Promise<string>;
+const VIZIER_TAP = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
 
 export function registerVizierTools(server: any) {
-  executeVizierQuery = async (catalog: string, ra?: number, dec?: number, radius?: number, lang?: string) => {
-    const args = ['vizier', 'query', '--catalog', catalog];
-    if (ra !== undefined) args.push('--ra', ra.toString());
-    if (dec !== undefined) args.push('--dec', dec.toString());
-    if (radius !== undefined) args.push('--radius', radius.toString());
-    if (lang) args.push('--lang', lang);
-
-    const result = await executeAqc(args);
-
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-
-    return result.output || '';
-  };
-
   server.tool(
     'vizier_query',
-    'Query the VizieR catalog database for a specific catalog',
+    'Query VizieR catalog service. Cone search by coordinates+radius on a specific catalog.',
     {
-      catalog: z.string().describe('Catalog identifier (e.g., "VII/118")'),
-      ra: z.number().optional().describe('Right Ascension (degrees)'),
-      dec: z.number().optional().describe('Declination (degrees)'),
-      radius: z.number().optional().describe('Search radius (degrees)'),
-      lang: z.enum(['en', 'zh']).optional().describe('Output language'),
+      target: z.string().describe('Target name or coordinates (e.g. "M31" or "10.684 +41.269")'),
+      radius: z.number().default(10).describe('Search radius in arcseconds'),
+      catalog: z.string().default('I/355/gaiadr3').describe('VizieR catalog ID (e.g. "I/355/gaiadr3", "II/246/out")'),
+      max_results: z.number().default(50).describe('Maximum number of results'),
+      lang: z.enum(['en', 'zh']).default('en').describe('Output language'),
     },
-    async ({ catalog, ra, dec, radius, lang }: any) => {
-      const output = await executeVizierQuery(catalog, ra, dec, radius, lang);
+    async ({ target, radius, catalog, max_results, lang }: { target: string; radius: number; catalog: string; max_results: number; lang: string }) => {
+      const tableName = `"${catalog}"`;
+      const radiusDeg = radius / 3600;
 
-      return {
-        content: [{
-          type: 'text',
-          text: output
-        }]
-      };
+      const coordMatch = target.match(/^([+-]?\d+\.?\d*)\s+([+-]?\d+\.?\d*)$/);
+
+      let adql: string;
+      if (coordMatch) {
+        const ra = coordMatch[1];
+        const dec = coordMatch[2];
+        adql = `SELECT TOP ${max_results} * FROM ${tableName} WHERE 1=CONTAINS(POINT('ICRS', RAJ2000, DEJ2000), CIRCLE('ICRS', ${ra}, ${dec}, ${radiusDeg}))`;
+      } else {
+        adql = `SELECT TOP ${max_results} * FROM ${tableName}`;
+      }
+
+      const result = await tapQuery({ endpoint: VIZIER_TAP, adql, maxrec: max_results });
+      const title = lang === 'zh' ? `VizieR 目录查询: ${catalog}` : `VizieR Catalog Query: ${catalog}`;
+      const text = formatTapResult(result, title);
+      return { content: [{ type: 'text' as const, text }] };
     }
   );
 }
-
-export { executeVizierQuery };
