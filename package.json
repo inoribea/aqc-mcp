@@ -1,6 +1,6 @@
 {
   "name": "aqc-mcp",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "MCP server for astronomical database queries via direct HTTP/TAP APIs",
   "keywords": [
     "mcp",

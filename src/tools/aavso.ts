@@ -7,7 +7,7 @@ function parseVOTable(xmlText: string): { columns: string[]; rows: Record<string
   const columns: string[] = [];
   const rows: Record<string, unknown>[] = [];
 
-  const fieldRegex = /<FIELD\s+name="([^"]+)"/g;
+  const fieldRegex = /<FIELD\s+[^>]*name="([^"]+)"/g;
   let match;
   while ((match = fieldRegex.exec(xmlText)) !== null) {
     columns.push(match[1]);
