@@ -3,8 +3,10 @@ import { startSseAndStreamableHttpMcpServer } from 'mcp-http-server';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { registerAllTools } from './tools/index.js';
+import { createRequire } from 'module';
 
-const VERSION = '2.0.0';
+const require = createRequire(import.meta.url);
+const VERSION = require('../package.json').version;
 
 function createMcpServer() {
   const server = new McpServer(
