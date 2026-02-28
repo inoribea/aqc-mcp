@@ -1,6 +1,6 @@
 {
   "name": "aqc-mcp",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "MCP server for astronomical database queries via direct HTTP/TAP APIs",
   "keywords": [
     "mcp",
@@ -12,7 +12,9 @@
     "vizier",
     "gaia",
     "alma",
-    "ads"
+    "ads",
+    "aavso",
+    "fermi"
   ],
   "homepage": "https://github.com/inoribea/aqc-mcp",
   "repository": {
@@ -39,7 +41,8 @@
     "@modelcontextprotocol/sdk": "^1.27.1",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "mcp-http-server": "^1.2.4"
+    "mcp-http-server": "^1.2.4",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

@@ -4,6 +4,8 @@ import { registerVizierTools } from './vizier.js';
 import { registerAlmaTools } from './alma.js';
 import { registerGaiaTools } from './gaia.js';
 import { registerAdsTools } from './ads.js';
+import { registerAavsoTools } from './aavso.js';
+import { registerFermiTools } from './fermi.js';
 import { registerEsaskyTools } from './esasky.js';
 import { registerEsoTools } from './eso.js';
 import { registerExoplanetTools } from './exoplanet.js';
@@ -22,6 +24,8 @@ export function registerAllTools(server: McpServer) {
   registerAlmaTools(server);
   registerGaiaTools(server);
   registerAdsTools(server);
+  registerAavsoTools(server);
+  registerFermiTools(server);
   registerEsaskyTools(server);
   registerEsoTools(server);
   registerExoplanetTools(server);
