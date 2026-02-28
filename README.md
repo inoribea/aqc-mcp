@@ -6,7 +6,7 @@ A Model Context Protocol (MCP) server for astroquery-cli, providing HTTP and SSE
 
 ## Overview ✨
 
-The astroquery-mcp server exposes astroquery CLI functionality as MCP tools, allowing AI applications and other services to query astronomical databases through standardized MCP protocols. Supports both HTTP and SSE transports.
+The aqc-mcp server provides direct HTTP/TAP API access to 17+ astronomical databases as MCP tools, allowing AI applications and other services to query astronomical data through standardized MCP protocols. Supports both HTTP and SSE transports.
 
 ---
 
@@ -17,24 +17,54 @@ The astroquery-mcp server exposes astroquery CLI functionality as MCP tools, all
   - HTTP (default)
   - SSE (Server-Sent Events)
   - Stdio (for Claude Desktop)
-- 🔌 **Extensible**: Easy to add new tools and modules
-- 🌍 **Language Support**: Multi-language output (English, Chinese, Japanese)
+- 🔌 **17 Databases**: Direct TAP/REST API access to major astronomical archives
+- 🌍 **Language Support**: Multi-language output (English, Chinese)
 - 📊 **Rich Output**: Formatted tables and structured results
 - 🔑 **ADS API Token Support**: Environment variable injection for authenticated queries
+- ⚡ **No Python Required**: Pure Node.js/TypeScript implementation
 
 ---
 
 ## Supported Modules 🧩
 
-Currently implemented tools:
+Currently implemented tools (17 astronomical databases):
 
+### General Astronomy
 - **SIMBAD**: Query SIMBAD astronomical database
 - **VizieR**: Query VizieR catalog database
-- **ALMA**: Query ALMA observations archive
+- **NED**: NASA/IPAC Extragalactic Database
 - **ADS**: NASA Astrophysics Data System queries (requires API token)
-- **Gaia**: Gaia archive cone search
 
-> ⚠️ More modules (ESASky, IRSA, Heasarc, JPL, MAST, NED, NIST, Exoplanet, SDSS, ESO, Splatalogue) coming soon!
+### Radio & Millimeter
+- **ALMA**: Query ALMA observations archive
+- **ESO**: European Southern Observatory science archive
+
+### High Energy & X-ray
+- **Fermi LAT**: Fermi Large Area Telescope gamma-ray source catalog
+- **HEASARC**: High Energy Astrophysics Science Archive (multiple missions)
+
+### Infrared & Submillimeter
+- **IRSA**: NASA/IPAC Infrared Science Archive
+
+### Space Observatories
+- **MAST**: Barbara A. Mikulski Archive for Space Telescopes
+- **ESASky**: Multi-mission all-sky archive
+
+### Solar System
+- **JPL Horizons**: Solar system body ephemerides and state vectors
+- **JPL SBDB**: Small-Body Database for asteroids and comets
+
+### Exoplanets & Stars
+- **Exoplanet**: NASA Exoplanet Archive
+- **AAVSO**: Variable Star Index (VSX catalog)
+- **NIST**: Atomic Spectra Database for spectral lines
+
+### Optical Surveys
+- **Gaia**: Gaia DR3 catalog cone search and ADQL queries
+- **SDSS**: Sloan Digital Sky Survey (DR18)
+- **Splatalogue**: Spectral line database
+
+### Total: 17 databases, 30+ tools
 
 ---
 
@@ -43,13 +73,9 @@ Currently implemented tools:
 ### Quick Start
 
 **Prerequisites:**
-- Python ≥ 3.11
 - Node.js ≥ 18.0.0
 
-**Install Python CLI:**
-```bash
-pip install astroquery-cli
-```
+**No Python dependency required** - aqc-mcp uses direct HTTP/TAP APIs to astronomical services.
 
 ### MCP Server Configuration
 
@@ -355,18 +381,31 @@ npm run watch
 ### Project Structure
 
 ```
-astroquery-mcp/
+aqc-mcp/
 ├── src/
 │   ├── index.ts           # Main server entry
-│   ├── tools/             # MCP tool definitions
+│   ├── tools/             # MCP tool definitions (17 databases)
 │   │   ├── index.ts       # Tool registration
-│   │   ├── simbad.ts
-│   │   ├── vizier.ts
-│   │   ├── alma.ts
-│   │   ├── ads.ts
-│   │   └── gaia.ts
+│   │   ├── simbad.ts      # SIMBAD queries
+│   │   ├── vizier.ts      # VizieR catalog queries
+│   │   ├── alma.ts        # ALMA archive queries
+│   │   ├── ads.ts         # ADS bibliographic queries
+│   │   ├── gaia.ts        # Gaia DR3 queries
+│   │   ├── aavso.ts       # AAVSO VSX variable stars
+│   │   ├── fermi.ts       # Fermi LAT gamma-ray sources
+│   │   ├── heasarc.ts     # HEASARC queries
+│   │   ├── esasky.ts      # ESASky multi-mission archive
+│   │   ├── eso.ts         # ESO science archive
+│   │   ├── exoplanet.ts   # NASA Exoplanet Archive
+│   │   ├── irsa.ts        # IRSA infrared archive
+│   │   ├── jpl.ts         # JPL Horizons & SBDB
+│   │   ├── mast.ts        # MAST space telescopes
+│   │   ├── ned.ts         # NED extragalactic DB
+│   │   ├── nist.ts        # NIST atomic spectra
+│   │   ├── sdss.ts        # SDSS optical survey
+│   │   └── splatalogue.ts # Spectral line database
 │   └── utils/
-│       └── executor.ts    # CLI command executor
+│       └── http.ts        # HTTP/TAP client utilities
 ├── dist/                  # Compiled JavaScript
 ├── package.json
 └── tsconfig.json
@@ -386,10 +425,6 @@ astroquery-mcp/
 
 ## Troubleshooting 🔍
 
-### "aqc: command not found"
-
-Make sure you're running the MCP server from within the `astroquery-mcp` directory, and that the parent `astroquery-cli` project has been installed via poetry.
-
 ### ADS queries fail
 
 Set the `ADS_API_KEY` environment variable:
@@ -407,6 +442,10 @@ Change the port:
 PORT=8080 npm start
 ```
 
+### Query timeouts
+
+Some astronomical databases (e.g., Fermi LAT, HEASARC) may take longer to respond. The server uses reasonable timeout values, but you can adjust them if needed by modifying the `timeout` parameter in the HTTP client.
+
 ---
 
 ## License 📄
@@ -423,6 +462,6 @@ Contributions welcome! Please open an issue or PR.
 
 ## Links 🔗
 
-- [astroquery-cli](../README.md)
+- [GitHub Repository](https://github.com/inoribea/aqc-mcp)
 - [MCP Specification](https://modelcontextprotocol.io/)
 - [NASA ADS API](https://ui.adsabs.harvard.edu/)
