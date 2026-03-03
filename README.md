@@ -110,8 +110,6 @@ Add to your Claude Desktop config file:
 }
 ```
 
-Get ADS token: https://ui.adsabs.harvard.edu/user/settings/token
-
 ### Alternative: Global Install
 
 ```bash
