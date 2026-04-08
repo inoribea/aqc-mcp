@@ -460,6 +460,6 @@ Contributions welcome! Please open an issue or PR.
 
 ## Links 🔗
 
-- [GitHub Repository](https://github.com/inoribea/aqc-mcp)
+- [astrocli](https://github.com/inoribea/astrocli)
 - [MCP Specification](https://modelcontextprotocol.io/)
 - [NASA ADS API](https://ui.adsabs.harvard.edu/)
